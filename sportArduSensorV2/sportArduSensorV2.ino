@@ -16,9 +16,12 @@ FrSkySportTelemetry frsky_telemetry;
 FrSkySportSensorFcs sensor_fcs_main;
 FrSkySportSensorGps sensor_gps;
 
-TinyGPSPlus GPS_parser;
 
 //sys vars
+#define GPS_BAUDRATE 57600L
+
+UbxGpsNavPosllh<HardwareSerial> gps(Serial); // GPS on HardwareSerial //NEO-6M does NOT support NavPvt-messages UBX-protocol
+
 float GPS_lat = 0;
 float GPS_lng = 0;
 int16_t GPS_alt; //+- m
@@ -31,7 +34,7 @@ byte GPS_sat_count = 0;
 float SYS_acc_main_v = 0.0f;
 float SYS_acc_video_v = 0.0f;
 
-#define GPS_SAT_MIN_COUNT 1
+
 #define SYS_ADC_PIN_acc_main A0
 #define SYS_ADC_PIN_acc_video A1
 
@@ -42,12 +45,7 @@ uint32_t TIMEMACHINE_prevMicros_1103ms = 0L;
 void setup() {
   delay(100);
   frsky_telemetry.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_12,  &sensor_gps, &sensor_fcs_main);
-  delay(100);
-  Serial.begin(57600);
-  delay(100);
-  Serial.println(F("$PMTK300,1000,0,0,0,0*1C")); //1Hz for MTK chipset!!!!!!
-  delay(100);
-  Serial.flush();
+  gps.begin(GPS_BAUDRATE);  
   analogReference(DEFAULT); //0..5 V on 5v_arduino
 }
 

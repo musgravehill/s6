@@ -1,4 +1,8 @@
-#include <SoftwareSerial.h>
+#include <Arduino.h>
+#include <SoftwareSerial.h> //S-PORT SOFT_SERIAL_PIN_2 to SOFT_SERIAL_PIN_12 for ATmega328P
+
+#include "UbxGpsNavPosllh.h" //from local folder sketch  //<UbxGpsNavPosllh.h> - from arduino/library folder
+
 #include "FrSkySportTelemetry/FrSkySportSensor.h"
 #include "FrSkySportTelemetry/FrSkySportSingleWireSerial.h"
 #include "FrSkySportTelemetry/FrSkySportTelemetry.h"
@@ -15,5 +19,4 @@
 #include "FrSkySportTelemetry/FrSkySportSensorGps.cpp"
 #include "FrSkySportTelemetry/FrSkySportSensorFcs.cpp"
 
-#include "TinyGPSplus/TinyGPS++.h"
-#include "TinyGPSplus/TinyGPS++.cpp"
+
