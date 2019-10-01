@@ -1,13 +1,15 @@
 /*
+
+  TODO
+  CHECK GPS-accuracy! UBX-messages приходят даже когда модуль не ловит спутники, приходят lat=17 lon=17 h=4000m
+
     USE RESISTOR 4.7K TO S.PORT FROM 5v-ARDUINO.
 
     The default S.Port rate for polling a GPS is 1 hz.
 
     Use hardware serial for GPS. Disconnect GPS when programming.
 
-    Also note that to avoid interrupt conflict with the mentioned SoftwareSerial library you need to disable attitude (roll/pitch)
-    sensing in the NazaDecoder library by uncommenting the following line in NazaDecoder.h file:
-  //#define ATTITUDE_SENSING_DISABLED
+
 */
 
 #include "incl.h"
@@ -45,7 +47,7 @@ uint32_t TIMEMACHINE_prevMicros_1103ms = 0L;
 void setup() {
   delay(100);
   frsky_telemetry.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_12,  &sensor_gps, &sensor_fcs_main);
-  gps.begin(GPS_BAUDRATE);  
+  gps.begin(GPS_BAUDRATE);
   analogReference(DEFAULT); //0..5 V on 5v_arduino
 }
 
