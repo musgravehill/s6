@@ -117,9 +117,7 @@ local function background_func()
 	 GPS_fixType = getValue(data_ids_Tmp2)
 	 GSpd = getValue(data_ids_GSpd)
 	 VTX_volt = getValue(data_ids_Curr) 
-	 LIPO_volt = getValue(data_ids_VFAS)
-	 
-		 
+	 LIPO_volt = getValue(data_ids_VFAS)	 
 	 
 	 if((GPS_sat_count > 4) and (GPS_fixType==4))then 
 			  gpsLatLon = getValue(data_ids_GPS)
@@ -140,16 +138,15 @@ local function run_func(e)
   lcd.clear()
   --background_func() вероятно, не нужно дергать, потому что background_func выполняется само периодически
   
-  SA = getValue('sa')
-  
-  if(SA==-1024) then
+  SD = getValue('sd')  
+  if(SD <= -900) then
     lcd.drawText(1,1,"STAB", 0)
   end
-  if(SA==0) then
+  if((SD > -50) and (SD < 50)) then 
     lcd.drawText(1,1,"NOSTAB", 0)
   end
-  if(SA==1024) then
-    lcd.drawText(1,1,"GYRO", 0)
+  if(SD >= 900) then
+    lcd.drawText(1,1,"GYRO", 0) 
   end   
   
   if(1==gps_home_is_init) then
@@ -159,27 +156,13 @@ local function run_func(e)
     lcd.drawText(1,20,"ALT_"..(gps_GAlt_last-gps_GAlt_home).." m",0) 	
 	lcd.drawText(1,30,"SPD_"..helper_math_round(GSpd,0).." m/s", 0)
 	gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)     
-	lcd.drawText(1,40,"GPS "..gpsValue, 0)   	
-  end  
-    lcd.drawText(1,56,"SAT_"..GPS_sat_count, SMLSIZE)	
-	lcd.drawText(33,56,"DOP_"..GPS_DOP, SMLSIZE)
-    lcd.drawText(62,56,get_gps_fix_name(GPS_fixType), SMLSIZE)	
-	
-  
-     --GPS_sat_count 
-	 --GPS_DOP  	 
-	 --VTX_volt
-	 
-	 --GPS_fixType [ 	 
-	--NO_FIX 0
-	--DEAD_RECKONING 1
-	--FIX_2D 2
-	--FIX_3D 3
-	--GNSS_AND_DEAD_RECKONING 4
-	--TIME_ONLY 5 	 
-  
-    
-    
+	lcd.drawText(1,40,"GPS_"..gpsValue, 0)   	
+	lcd.drawText(1,50,"ACC_"..helper_math_round(LIPO_volt,2), 0)   
+	lcd.drawText(64,50,"VTX_"..helper_math_round(VTX_volt,2), 0)       
+  end  	
+    lcd.drawText(1,58,"SAT_"..GPS_sat_count, SMLSIZE)	
+	lcd.drawText(33,58,"DOP_"..GPS_DOP, SMLSIZE)
+    lcd.drawText(62,58,get_gps_fix_name(GPS_fixType), SMLSIZE)	 
    
 end
 
