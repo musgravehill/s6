@@ -14,10 +14,18 @@ local gps_home_is_init = 1
 local data_ids_GPS = 0 
 local data_ids_GAlt = 0
 local data_ids_VFAS = 0 
+local data_ids_RPM = 0     
+local data_ids_GSpd = 0  
+local data_ids_Tmp1 = 0
+local data_ids_Tmp2 = 0
+local data_ids_Curr = 0
 
-local lipo_v_max = 12.60 --volt
-local lipo_v_min = 11.00 --volt
-local lipo_v_gauge_w = 40 --px
+local GPS_sat_count = 0 --data_ids_RPM 
+local GPS_DOP = 0 -- data_ids_Tmp1
+local GPS_fixType = 0 --data_ids_Tmp2
+local GSpd = 0 -- GSpd
+local VTX_volt = 0 --data_ids_Curr 
+local LIPO_volt = 0 --main accum
 
 --покажи сообщение "ждите * сек, чтобы GPS HOME сформировался" и обратный таймер, если gps_lat_home || gps_lon_home нулевые
  
@@ -66,25 +74,63 @@ local function gps_home_process()
 	 end 
 end
 
+local function get_gps_fix_name(fixTypeInt)
+	local nm = "?";
+	--NO_FIX 1
+	--DEAD_RECKONING 2
+	--FIX_2D 3
+	--FIX_3D 4
+	--GNSS_AND_DEAD_RECKONING 5
+	--TIME_ONLY 6 
+	if(1==fixTypeInt)then
+		nm= "NO_FIX";
+    elseif(2==fixTypeInt) then
+		nm= "DEADRECKONING";
+	elseif(3==fixTypeInt) then
+		nm= "FIX_2D";
+	elseif(4==fixTypeInt) then
+		nm= "FIX_3D";
+	elseif(5==fixTypeInt) then
+		nm= "GNSSDEADRECKONING";	
+	elseif(6==fixTypeInt) then
+		nm= "TIME_ONLY";		
+	end
+	return nm;
+end
+
 --function is called once when script is loaded and begins execution
 local function init_func()
-  data_ids_GPS = getFieldInfo("GPS").id 
-  data_ids_GAlt = getFieldInfo("GAlt").id     
-  data_ids_VFAS = getFieldInfo("VFAS").id     
+	data_ids_GPS = getFieldInfo("GPS").id 
+	data_ids_GAlt = getFieldInfo("GAlt").id     
+	data_ids_VFAS = getFieldInfo("VFAS").id 
+	data_ids_RPM = getFieldInfo("RPM").id      
+	data_ids_GSpd = getFieldInfo("GSpd").id  
+	data_ids_Tmp1 = getFieldInfo("Tmp1").id  
+	data_ids_Tmp2 = getFieldInfo("Tmp2").id  
+	data_ids_Curr = getFieldInfo("Curr").id                     
 end
 
 --is called periodically, the screen visibility does not matter
-local function background_func()
-  gpsLatLon = getValue(data_ids_GPS)
-  if ("table"==type(gpsLatLon)) then
-    gps_lat_last = gpsLatLon["lat"]
-	gps_lon_last = gpsLatLon["lon"]    
-    gps_home_init() 
-	gps_home_process()
-  end
-  
-  gps_GAlt_last = getValue(data_ids_GAlt)     
-  
+local function background_func()	   
+	 GPS_sat_count = getValue(data_ids_RPM) 
+	 GPS_DOP = getValue(data_ids_Tmp1)
+	 GPS_fixType = getValue(data_ids_Tmp2)
+	 GSpd = getValue(data_ids_GSpd)
+	 VTX_volt = getValue(data_ids_Curr) 
+	 LIPO_volt = getValue(data_ids_VFAS)
+	 
+		 
+	 
+	 if((GPS_sat_count > 4) and (GPS_fixType==4))then 
+			  gpsLatLon = getValue(data_ids_GPS)
+			  if ("table"==type(gpsLatLon)) then
+					gps_lat_last = gpsLatLon["lat"]
+					gps_lon_last = gpsLatLon["lon"]    
+					gps_home_init() 
+					gps_home_process()
+			  end  
+			  gps_GAlt_last = getValue(data_ids_GAlt)   
+	 end    
 end 
 
 
@@ -97,34 +143,43 @@ local function run_func(e)
   SA = getValue('sa')
   
   if(SA==-1024) then
-    lcd.drawText(1,1,"MODE STAB", 0)
+    lcd.drawText(1,1,"STAB", 0)
   end
   if(SA==0) then
-    lcd.drawText(1,1,"MODE NOSTAB", 0)
+    lcd.drawText(1,1,"NOSTAB", 0)
   end
   if(SA==1024) then
-    lcd.drawText(1,1,"MODE GYRO", 0)
-  end
-  
-  
+    lcd.drawText(1,1,"GYRO", 0)
+  end   
   
   if(1==gps_home_is_init) then
-	lcd.drawText(1,12,"WAIT...GPS HOME INIT",0)
-  else
-    gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)    
-    lcd.drawText(1,12,"GPS "..gpsValue, 0)
-	lcd.drawText(1,24,"ALT "..(gps_GAlt_last-gps_GAlt_home).."m",0) 
-	lcd.drawText(1,36,"DIST "..helper_getMetersBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last).."m",0)
-  end
+	lcd.drawText(1,10,"WAIT...GPS HOME INIT",0)
+  else  	
+	lcd.drawText(1,10,"DIST_"..helper_getMetersBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last).." m",0)
+    lcd.drawText(1,20,"ALT_"..(gps_GAlt_last-gps_GAlt_home).." m",0) 	
+	lcd.drawText(1,30,"SPD_"..helper_math_round(GSpd,0).." m/s", 0)
+	gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)     
+	lcd.drawText(1,40,"GPS "..gpsValue, 0)   	
+  end  
+    lcd.drawText(1,56,"SAT_"..GPS_sat_count, SMLSIZE)	
+	lcd.drawText(33,56,"DOP_"..GPS_DOP, SMLSIZE)
+    lcd.drawText(62,56,get_gps_fix_name(GPS_fixType), SMLSIZE)	
+	
   
-  lipo_v = getValue(data_ids_VFAS)  
-  lipo_v_gauge_fill_max = 100*  (lipo_v_max-lipo_v_min) 
-  lipo_v_gauge_fill = lipo_v_gauge_fill_max - 100*(lipo_v_max-lipo_v) 
-  if(lipo_v_gauge_fill<0) then lipo_v_gauge_fill=0 end
-  if(lipo_v_gauge_fill>lipo_v_gauge_fill_max) then lipo_v_gauge_fill=lipo_v_gauge_fill_max end 
-       
-  lcd.drawText(46,50, helper_math_round(lipo_v,2).."V", 0) 
-  lcd.drawGauge(1, 48, lipo_v_gauge_w, 12, lipo_v_gauge_fill, lipo_v_gauge_fill_max)  -- x y w h fill max_fill    
+     --GPS_sat_count 
+	 --GPS_DOP  	 
+	 --VTX_volt
+	 
+	 --GPS_fixType [ 	 
+	--NO_FIX 0
+	--DEAD_RECKONING 1
+	--FIX_2D 2
+	--FIX_3D 3
+	--GNSS_AND_DEAD_RECKONING 4
+	--TIME_ONLY 5 	 
+  
+    
+    
    
 end
 

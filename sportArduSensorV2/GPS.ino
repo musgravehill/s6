@@ -5,22 +5,22 @@ void GPS_process() {
 
     switch (gps.getFixType()) {
       case gps.NO_FIX:
-        GPS_fixType = 0;
-        break;
-      case gps.DEAD_RECKONING:
         GPS_fixType = 1;
         break;
-      case gps.FIX_2D:
+      case gps.DEAD_RECKONING:
         GPS_fixType = 2;
         break;
-      case gps.FIX_3D:
+      case gps.FIX_2D:
         GPS_fixType = 3;
         break;
-      case gps.GNSS_AND_DEAD_RECKONING:
+      case gps.FIX_3D:
         GPS_fixType = 4;
         break;
-      case gps.TIME_ONLY:
+      case gps.GNSS_AND_DEAD_RECKONING:
         GPS_fixType = 5;
+        break;
+      case gps.TIME_ONLY:
+        GPS_fixType = 6;
         break;
     }
 
