@@ -240,6 +240,7 @@ local function run_func(e)
 	local home_y = 16	
     lcd.drawRectangle(home_x, home_y+10, 11, 11, SOLID)
 	lcd.drawFilledRectangle(home_x+2, home_y+12, 7, 7, SOLID)
+	lcd.drawText(home_x-4,home_y+22,"HOME", SMLSIZE)
 	if((GPS_HOME_arrow_degree>315) or (GPS_HOME_arrow_degree<45))then  --out from home		
 		lcd.drawLine(home_x+5, home_y, home_x+5, home_y+10, SOLID, FORCE)
 		lcd.drawLine(home_x, home_y+5, home_x+5, home_y, SOLID, FORCE)
