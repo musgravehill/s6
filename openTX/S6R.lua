@@ -10,6 +10,7 @@ local gps_GAlt_last = 0
 local gps_home_time_start = 0  
 local gps_home_time_delay = 5 --seconds   TODO 30..60 sec
 local gps_home_is_init = 1
+local gpd_heading = 0 
 
 local data_ids_GPS = 0 
 local data_ids_GAlt = 0
@@ -19,6 +20,7 @@ local data_ids_GSpd = 0
 local data_ids_Tmp1 = 0
 local data_ids_Tmp2 = 0
 local data_ids_Curr = 0
+local data_ids_Hdg = 0            
 
 local GPS_sat_count = 0 --data_ids_RPM 
 local GPS_DOP = 0 -- data_ids_Tmp1
@@ -26,17 +28,13 @@ local GPS_fixType = 0 --data_ids_Tmp2
 local GSpd = 0 -- GSpd
 local VTX_volt = 0 --data_ids_Curr 
 local LIPO_volt = 0 --main accum
+local GPS_HOME_arrow_degree = 0
 
 -- Directions in 1 of 16 compass rose directions
 --  N, NNE, NE, ENE as 0, 23, 45, 68
 --  E, ESE, SE,SSE as 90, 113, 135, 158
 --  S, SSW, SW, WSW as 180, 203, 225, 248
 --  W, WNW, NW, NNW as 270, 293, 315, 338
-
--- Home Turn directions in 1 of 10 degree amounts and 1 of 2 turn directions
---  -ve for left and +ve for right
---  -23, -45, -90, -135, 0, 23, 45, 90, 135, 180
-
 local function getDegreesBetweenCoordinates(LatFrom, LonFrom, LatTo, LonTo)
   -- Returns the angle in degrees between two GPS positions
   -- Latitude and Longitude in decimal degrees
@@ -62,6 +60,14 @@ local function getDegreesBetweenCoordinates(LatFrom, LonFrom, LatTo, LonTo)
     return Bearing
   end
 end
+
+local function GPS_HOME_arrow_degree_calc() 
+  local HOME_degrees = getDegreesBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last) 	  
+  GPS_HOME_arrow_degree = HOME_degrees - gpd_heading;
+  if(GPS_HOME_arrow_degree < 0) then
+    GPS_HOME_arrow_degree = GPS_HOME_arrow_degree + 360
+  end   
+end 
 
 
 local function getCompassDirection16Degrees(degrees)
@@ -183,7 +189,8 @@ local function init_func()
 	data_ids_GSpd = getFieldInfo("GSpd").id  
 	data_ids_Tmp1 = getFieldInfo("Tmp1").id  
 	data_ids_Tmp2 = getFieldInfo("Tmp2").id  
-	data_ids_Curr = getFieldInfo("Curr").id                     
+	data_ids_Curr = getFieldInfo("Curr").id     
+    data_ids_Hdg = getFieldInfo("Hdg").id  	
 end
 
 --is called periodically, the screen visibility does not matter
@@ -196,14 +203,16 @@ local function background_func()
 	 LIPO_volt = getValue(data_ids_VFAS)	 
 	 
 	 if((GPS_sat_count > 4) and (GPS_fixType==4))then 
-			  gpsLatLon = getValue(data_ids_GPS)
-			  if ("table"==type(gpsLatLon)) then
-					gps_lat_last = gpsLatLon["lat"]
-					gps_lon_last = gpsLatLon["lon"]    
-					gps_home_init() 
-					gps_home_process()
-			  end  
-			  gps_GAlt_last = getValue(data_ids_GAlt)   
+			gpsLatLon = getValue(data_ids_GPS)
+			if ("table"==type(gpsLatLon)) then
+				gps_lat_last = gpsLatLon["lat"]
+				gps_lon_last = gpsLatLon["lon"]    
+				gps_home_init() 
+				gps_home_process()
+			end  			  
+			gps_GAlt_last = getValue(data_ids_GAlt)
+			gpd_heading = getValue(data_ids_Hdg) 
+			GPS_HOME_arrow_degree_calc()  
 	 end    
 end 
 
@@ -227,8 +236,22 @@ local function run_func(e)
 		lcd.drawText(1,50,"GPS_"..gpsValue, SMLSIZE) 	    
 	end  	  
   
-    local HOME_degrees = getDegreesBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last) 
-	lcd.drawText(64,40, HOME_degrees, SMLSIZE) 	
+    local home_x = 88
+	local home_y = 16	
+    lcd.drawRectangle(home_x, home_y+10, 11, 11, SOLID)
+	lcd.drawFilledRectangle(home_x+2, home_y+12, 7, 7, SOLID)
+	if((GPS_HOME_arrow_degree>315) or (GPS_HOME_arrow_degree<45))then  --out from home		
+		lcd.drawLine(home_x+5, home_y, home_x+5, home_y+10, SOLID, FORCE)
+		lcd.drawLine(home_x, home_y+5, home_x+5, home_y, SOLID, FORCE)
+		lcd.drawLine(home_x+5, home_y, home_x+10, home_y+5, SOLID, FORCE)	
+	elseif ((GPS_HOME_arrow_degree>135) and (GPS_HOME_arrow_degree<225)) then --return to home	   
+		lcd.drawLine(home_x+5, home_y, home_x+5, home_y+10, SOLID, FORCE)
+		lcd.drawLine(home_x, home_y+5, home_x+5, home_y+10, SOLID, FORCE)
+		lcd.drawLine(home_x+5, home_y+10, home_x+10, home_y+5, SOLID, FORCE)
+	else		
+		lcd.drawLine(home_x+5, home_y+5, home_x+10+5, home_y+10+5, SOLID, FORCE)
+	end
+    --lcd.drawText(64, 30, GPS_HOME_arrow_degree, SMLSIZE)  	
   
 	SD = getValue('sd')  
 	if(SD <= -900) then
