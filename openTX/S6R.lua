@@ -27,8 +27,84 @@ local GSpd = 0 -- GSpd
 local VTX_volt = 0 --data_ids_Curr 
 local LIPO_volt = 0 --main accum
 
---покажи сообщение "ждите * сек, чтобы GPS HOME сформировался" и обратный таймер, если gps_lat_home || gps_lon_home нулевые
- 
+-- Directions in 1 of 16 compass rose directions
+--  N, NNE, NE, ENE as 0, 23, 45, 68
+--  E, ESE, SE,SSE as 90, 113, 135, 158
+--  S, SSW, SW, WSW as 180, 203, 225, 248
+--  W, WNW, NW, NNW as 270, 293, 315, 338
+
+-- Home Turn directions in 1 of 10 degree amounts and 1 of 2 turn directions
+--  -ve for left and +ve for right
+--  -23, -45, -90, -135, 0, 23, 45, 90, 135, 180
+
+local function getDegreesBetweenCoordinates(LatFrom, LonFrom, LatTo, LonTo)
+  -- Returns the angle in degrees between two GPS positions
+  -- Latitude and Longitude in decimal degrees
+  -- E.g. 40.1234, -75.4523342
+  -- http://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
+  -- A: LatFrom, LonFrom
+  -- B: LatTo, LonTo
+  --LatFrom = 39.099912
+  --LonFrom = -94.581213
+  --LatTo = 38.627089
+  --LonTo = -90.200203
+  -- correct answer is X  = 0.05967668696, Y = -0.00681261948, ? = 96.51°
+  local X =  math.cos(math.rad(LatTo)) * math.sin(math.rad(LonTo-LonFrom))
+
+  local Y = (math.cos(math.rad(LatFrom)) * math.sin(math.rad(LatTo))) - (
+  math.sin(math.rad(LatFrom)) * math.cos(math.rad(LatTo)) * math.cos(math.rad(LonTo-LonFrom)))
+
+  local Bearing = math.deg(math.atan2(math.rad(X), math.rad(Y)))
+
+  if Bearing < 0 then
+    return 360 + Bearing
+  else
+    return Bearing
+  end
+end
+
+
+local function getCompassDirection16Degrees(degrees)
+  -- Converts degrees to 1 of 16 compass rose directions
+  -- degrees must be positive and less than equal to 360
+  if degrees >= 0 then
+    if degrees < 11.25 then
+      return 0
+    elseif degrees < 33.75 then
+      return 23
+    elseif degrees < 56.25 then
+      return 45
+    elseif degrees < 78.75 then
+      return 68
+    elseif degrees < 101.25 then
+      return 90
+    elseif degrees < 123.75 then
+      return 113
+    elseif degrees < 146.25 then
+      return 135
+    elseif degrees < 168.75 then
+      return 158
+    elseif degrees < 191.25 then
+      return 180
+    elseif degrees < 213.75 then
+      return 203
+    elseif degrees < 236.25 then
+      return 225
+    elseif degrees < 258.75 then
+      return 248
+    elseif degrees < 281.25 then
+      return 270
+    elseif degrees < 303.75 then
+      return 293
+    elseif degrees < 326.25 then
+      return 315
+    elseif degrees < 348.75 then
+      return 338
+    elseif degrees <= 360 then
+      return 0    
+    end
+  end
+end
 
 local function helper_getMetersBetweenCoordinates(Lat1, Lon1, Lat2, Lon2)
   -- Returns distance in meters between two GPS positions
@@ -134,36 +210,45 @@ end
 
 
 --function is called periodically when custom telemetry screen is visible
+--background_func() вероятно, не нужно дергать, потому что background_func выполняется само периодически
 local function run_func(e)
-  lcd.clear()
-  --background_func() вероятно, не нужно дергать, потому что background_func выполняется само периодически
+	lcd.clear()    
   
-  SD = getValue('sd')  
-  if(SD <= -900) then
-    lcd.drawText(1,1,"STAB", 0)
-  end
-  if((SD > -50) and (SD < 50)) then 
-    lcd.drawText(1,1,"NOSTAB", 0)
-  end
-  if(SD >= 900) then
-    lcd.drawText(1,1,"GYRO", 0) 
-  end   
+	lcd.drawText(1,1,"ACC_"..helper_math_round(LIPO_volt,2), 0)   
+	lcd.drawText(64,1,"VTX_"..helper_math_round(VTX_volt,2), 0)   
   
-  if(1==gps_home_is_init) then
-	lcd.drawText(1,10,"WAIT...GPS HOME INIT",0)
-  else  	
-	lcd.drawText(1,10,"DIST_"..helper_getMetersBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last).." m",0)
-    lcd.drawText(1,20,"ALT_"..(gps_GAlt_last-gps_GAlt_home).." m",0) 	
-	lcd.drawText(1,30,"SPD_"..helper_math_round(GSpd,0).." m/s", 0)
-	gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)     
-	lcd.drawText(1,40,"GPS_"..gpsValue, 0)   	
-	lcd.drawText(1,50,"ACC_"..helper_math_round(LIPO_volt,2), 0)   
-	lcd.drawText(64,50,"VTX_"..helper_math_round(VTX_volt,2), 0)       
-  end  	
+	if(1==gps_home_is_init) then
+		lcd.drawText(1,10,"WAIT...GPS HOME INIT",0)
+	else  	
+		lcd.drawText(1,10,"DIST_"..helper_getMetersBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last).." m",0)
+		lcd.drawText(1,20,"ALT_"..(gps_GAlt_last-gps_GAlt_home).." m",0) 	
+		lcd.drawText(1,30,"SPD_"..helper_math_round(GSpd,0).." m/s", 0)
+		gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)     
+		lcd.drawText(1,50,"GPS_"..gpsValue, SMLSIZE) 	    
+	end  	  
+  
+    local HOME_degrees = getDegreesBetweenCoordinates(gps_lat_home,gps_lon_home,gps_lat_last,gps_lon_last) 
+	lcd.drawText(64,40, HOME_degrees, SMLSIZE) 	
+  
+	SD = getValue('sd')  
+	if(SD <= -900) then
+		lcd.drawText(1,40,"STAB", 0) 
+	end
+	if((SD > -50) and (SD < 50)) then 
+		lcd.drawText(1,40,"NOSTAB", 0)
+	end
+	if(SD >= 900) then
+		lcd.drawText(1,50,"GYRO", 0) 
+	end  
+  
     lcd.drawText(1,58,"SAT_"..GPS_sat_count, SMLSIZE)	
 	lcd.drawText(33,58,"DOP_"..GPS_DOP, SMLSIZE)
     lcd.drawText(62,58,get_gps_fix_name(GPS_fixType), SMLSIZE)	 
    
 end
+
+
+
+
 
 return{init=init_func,run=run_func,background=background_func}
