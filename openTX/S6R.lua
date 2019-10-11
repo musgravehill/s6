@@ -262,7 +262,7 @@ local function run_func(e)
 		lcd.drawText(1,40,"NOSTAB", 0)
 	end
 	if(SD >= 900) then
-		lcd.drawText(1,50,"GYRO", 0) 
+		lcd.drawText(1,40,"GYRO", 0) 
 	end  
   
     lcd.drawText(1,58,"SAT_"..GPS_sat_count, SMLSIZE)	
