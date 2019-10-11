@@ -36,24 +36,11 @@ local GPS_HOME_arrow_degree = 0
 --  S, SSW, SW, WSW as 180, 203, 225, 248
 --  W, WNW, NW, NNW as 270, 293, 315, 338
 local function getDegreesBetweenCoordinates(LatFrom, LonFrom, LatTo, LonTo)
-  -- Returns the angle in degrees between two GPS positions
-  -- Latitude and Longitude in decimal degrees
-  -- E.g. 40.1234, -75.4523342
-  -- http://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
-  -- A: LatFrom, LonFrom
-  -- B: LatTo, LonTo
-  --LatFrom = 39.099912
-  --LonFrom = -94.581213
-  --LatTo = 38.627089
-  --LonTo = -90.200203
-  -- correct answer is X  = 0.05967668696, Y = -0.00681261948, ? = 96.51°
+  -- Returns the angle in degrees between two GPS positions  
   local X =  math.cos(math.rad(LatTo)) * math.sin(math.rad(LonTo-LonFrom))
-
   local Y = (math.cos(math.rad(LatFrom)) * math.sin(math.rad(LatTo))) - (
   math.sin(math.rad(LatFrom)) * math.cos(math.rad(LatTo)) * math.cos(math.rad(LonTo-LonFrom)))
-
-  local Bearing = math.deg(math.atan2(math.rad(X), math.rad(Y)))
-
+  local Bearing = math.deg(math.atan2(math.rad(X), math.rad(Y)))  
   if Bearing < 0 then
     return 360 + Bearing
   else
@@ -70,47 +57,7 @@ local function GPS_HOME_arrow_degree_calc()
 end 
 
 
-local function getCompassDirection16Degrees(degrees)
-  -- Converts degrees to 1 of 16 compass rose directions
-  -- degrees must be positive and less than equal to 360
-  if degrees >= 0 then
-    if degrees < 11.25 then
-      return 0
-    elseif degrees < 33.75 then
-      return 23
-    elseif degrees < 56.25 then
-      return 45
-    elseif degrees < 78.75 then
-      return 68
-    elseif degrees < 101.25 then
-      return 90
-    elseif degrees < 123.75 then
-      return 113
-    elseif degrees < 146.25 then
-      return 135
-    elseif degrees < 168.75 then
-      return 158
-    elseif degrees < 191.25 then
-      return 180
-    elseif degrees < 213.75 then
-      return 203
-    elseif degrees < 236.25 then
-      return 225
-    elseif degrees < 258.75 then
-      return 248
-    elseif degrees < 281.25 then
-      return 270
-    elseif degrees < 303.75 then
-      return 293
-    elseif degrees < 326.25 then
-      return 315
-    elseif degrees < 348.75 then
-      return 338
-    elseif degrees <= 360 then
-      return 0    
-    end
-  end
-end
+
 
 local function helper_getMetersBetweenCoordinates(Lat1, Lon1, Lat2, Lon2)
   -- Returns distance in meters between two GPS positions
@@ -225,6 +172,9 @@ local function run_func(e)
   
 	lcd.drawText(1,1,"ACC_"..helper_math_round(LIPO_volt,2), 0)   
 	lcd.drawText(64,1,"VTX_"..helper_math_round(VTX_volt,2), 0)   
+	
+	local gateCoef_x = math.sin(math.rad(GPS_HOME_arrow_degree)) --sin(0)=0  	
+	local gateCoef_y = math.cos(math.rad(GPS_HOME_arrow_degree)) --cos(0)=1
   
 	if(1==gps_home_is_init) then
 		lcd.drawText(1,10,"WAIT...GPS HOME INIT",0)
@@ -233,26 +183,39 @@ local function run_func(e)
 		lcd.drawText(1,20,"ALT_"..(gps_GAlt_last-gps_GAlt_home).." m",0) 	
 		lcd.drawText(1,30,"SPD_"..helper_math_round(GSpd,0).." m/s", 0)
 		gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)     
-		lcd.drawText(1,50,"GPS_"..gpsValue, SMLSIZE) 	    
+		--lcd.drawText(1,50,"GPS_"..gpsValue, SMLSIZE) 	
+        lcd.drawText(1,50,gateCoef_x.." "..gateCoef_y, SMLSIZE) 		
 	end  	  
   
     local home_x = 88
-	local home_y = 16	
-    lcd.drawRectangle(home_x, home_y+10, 11, 11, SOLID)
-	lcd.drawFilledRectangle(home_x+2, home_y+12, 7, 7, SOLID)
-	lcd.drawText(home_x-4,home_y+22,"HOME", SMLSIZE)
-	if((GPS_HOME_arrow_degree>315) or (GPS_HOME_arrow_degree<45))then  --out from home		
-		lcd.drawLine(home_x+5, home_y, home_x+5, home_y+10, SOLID, FORCE)
-		lcd.drawLine(home_x, home_y+5, home_x+5, home_y, SOLID, FORCE)
-		lcd.drawLine(home_x+5, home_y, home_x+10, home_y+5, SOLID, FORCE)	
-	elseif ((GPS_HOME_arrow_degree>135) and (GPS_HOME_arrow_degree<225)) then --return to home	   
-		lcd.drawLine(home_x+5, home_y, home_x+5, home_y+10, SOLID, FORCE)
-		lcd.drawLine(home_x, home_y+5, home_x+5, home_y+10, SOLID, FORCE)
-		lcd.drawLine(home_x+5, home_y+10, home_x+10, home_y+5, SOLID, FORCE)
-	else		
-		lcd.drawLine(home_x+5, home_y+5, home_x+10+5, home_y+10+5, SOLID, FORCE)
+	local home_y = 11	
+	local sizeHalf = 12
+	local sizeFull = 24
+	 
+	lcd.drawText(home_x+2, home_y+sizeFull+2,"HOME", SMLSIZE)
+	lcd.drawLine(home_x+sizeHalf, home_y+sizeHalf, home_x+sizeHalf-(gateCoef_x*sizeHalf), home_y+sizeHalf-(gateCoef_y*sizeHalf), SOLID, FORCE)
+	lcd.drawFilledRectangle(home_x+sizeHalf-2, home_y+sizeHalf-2, 5, 5, SOLID) 
+	
+	local circle_x, circle_y, circle_r = home_x+sizeHalf, home_y+sizeHalf, sizeHalf
+	for circle_i = 1, 360 do
+	  local circle_angle = circle_i * math.pi / 180
+	  local circle_ptx, circle_pty = circle_x + circle_r * math.cos( circle_angle ), circle_y + circle_r * math.sin( circle_angle )
+	  lcd.drawPoint( circle_ptx, circle_pty ) 
 	end
-    --lcd.drawText(64, 30, GPS_HOME_arrow_degree, SMLSIZE)  	
+	
+	if((GPS_HOME_arrow_degree>=270) or (GPS_HOME_arrow_degree<=90))then  --out from home		
+		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf, home_y+sizeFull, SOLID, FORCE)
+		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf-sizeArrow, home_y+sizeArrow, SOLID, FORCE)
+		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf+sizeArrow, home_y+sizeArrow, SOLID, FORCE)	
+		--gate
+		--lcd.drawLine(home_x+sizeHalf, home_y+sizeFull, home_x+sizeHalf-(gateCoef_x*sizeHalf), home_y+sizeFull-(gateCoef_y*sizeFull), SOLID, FORCE)
+	elseif ((GPS_HOME_arrow_degree>90) and (GPS_HOME_arrow_degree<270)) then --return to home	   
+		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf, home_y+sizeFull, SOLID, FORCE)
+		--lcd.drawLine(home_x+sizeHalf, home_y+sizeFull , home_x+sizeHalf-sizeArrow, home_y+sizeFull-sizeArrow , SOLID, FORCE)
+		--lcd.drawLine(home_x+sizeHalf, home_y+sizeFull , home_x+sizeHalf+sizeArrow, home_y+sizeFull-sizeArrow , SOLID, FORCE)
+		--gate
+		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf-(gateCoef_x*sizeHalf), home_y-(gateCoef_y*sizeFull), SOLID, FORCE)
+	end     	
   
 	SD = getValue('sd')  
 	if(SD <= -900) then
