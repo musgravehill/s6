@@ -183,16 +183,15 @@ local function run_func(e)
 		lcd.drawText(1,20,"ALT_"..(gps_GAlt_last-gps_GAlt_home).." m",0) 	
 		lcd.drawText(1,30,"SPD_"..helper_math_round(GSpd,0).." m/s", 0)
 		gpsValue = helper_math_round(gps_lat_last,6) .. ", " .. helper_math_round(gps_lon_last,6)     
-		--lcd.drawText(1,50,"GPS_"..gpsValue, SMLSIZE) 	
-        lcd.drawText(1,50,gateCoef_x.." "..gateCoef_y, SMLSIZE) 		
+		lcd.drawText(1,50,"GPS_"..gpsValue, SMLSIZE) 	         		
 	end  	  
   
-    local home_x = 88
-	local home_y = 11	
-	local sizeHalf = 12
-	local sizeFull = 24
+    local home_x = 92
+	local home_y = 12	
+	local sizeHalf = 13
+	local sizeFull = 26
 	 
-	lcd.drawText(home_x+2, home_y+sizeFull+2,"HOME", SMLSIZE)
+	lcd.drawText(home_x+4, home_y+sizeFull+2,"HOME", SMLSIZE)
 	lcd.drawLine(home_x+sizeHalf, home_y+sizeHalf, home_x+sizeHalf-(gateCoef_x*sizeHalf), home_y+sizeHalf-(gateCoef_y*sizeHalf), SOLID, FORCE)
 	lcd.drawFilledRectangle(home_x+sizeHalf-2, home_y+sizeHalf-2, 5, 5, SOLID) 
 	
@@ -201,21 +200,7 @@ local function run_func(e)
 	  local circle_angle = circle_i * math.pi / 180
 	  local circle_ptx, circle_pty = circle_x + circle_r * math.cos( circle_angle ), circle_y + circle_r * math.sin( circle_angle )
 	  lcd.drawPoint( circle_ptx, circle_pty ) 
-	end
-	
-	if((GPS_HOME_arrow_degree>=270) or (GPS_HOME_arrow_degree<=90))then  --out from home		
-		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf, home_y+sizeFull, SOLID, FORCE)
-		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf-sizeArrow, home_y+sizeArrow, SOLID, FORCE)
-		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf+sizeArrow, home_y+sizeArrow, SOLID, FORCE)	
-		--gate
-		--lcd.drawLine(home_x+sizeHalf, home_y+sizeFull, home_x+sizeHalf-(gateCoef_x*sizeHalf), home_y+sizeFull-(gateCoef_y*sizeFull), SOLID, FORCE)
-	elseif ((GPS_HOME_arrow_degree>90) and (GPS_HOME_arrow_degree<270)) then --return to home	   
-		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf, home_y+sizeFull, SOLID, FORCE)
-		--lcd.drawLine(home_x+sizeHalf, home_y+sizeFull , home_x+sizeHalf-sizeArrow, home_y+sizeFull-sizeArrow , SOLID, FORCE)
-		--lcd.drawLine(home_x+sizeHalf, home_y+sizeFull , home_x+sizeHalf+sizeArrow, home_y+sizeFull-sizeArrow , SOLID, FORCE)
-		--gate
-		--lcd.drawLine(home_x+sizeHalf, home_y, home_x+sizeHalf-(gateCoef_x*sizeHalf), home_y-(gateCoef_y*sizeFull), SOLID, FORCE)
-	end     	
+	end	   	
   
 	SD = getValue('sd')  
 	if(SD <= -900) then
