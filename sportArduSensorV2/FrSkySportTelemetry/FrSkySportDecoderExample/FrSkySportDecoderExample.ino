@@ -1,9 +1,9 @@
 /*
   FrSky S-Port Telemetry Decoder library example
-  (c) Pawelsky 20190824
+  (c) Pawelsky 20210108
   Not for commercial use
   
-  Note that you need Teensy 3.x/LC, ESP8266 or ATmega328P based (e.g. Pro Mini, Nano, Uno) board and FrSkySportDecoder library for this example to work
+  Note that you need Teensy LC/3.x/4.x, ESP8266, ATmega2560 (Mega) or ATmega328P based (e.g. Pro Mini, Nano, Uno) board and FrSkySportDecoder library for this example to work
 */
 
 // Uncomment the #define below to enable internal polling of data.
@@ -12,6 +12,7 @@
 
 #include "FrSkySportSensor.h"
 #include "FrSkySportSensorAss.h"
+#include "FrSkySportSensorEsc.h"
 #include "FrSkySportSensorFcs.h"
 #include "FrSkySportSensorFlvss.h"
 #include "FrSkySportSensorGps.h"
@@ -20,11 +21,12 @@
 #include "FrSkySportSensorVario.h"
 #include "FrSkySportSingleWireSerial.h"
 #include "FrSkySportDecoder.h"
-#if !defined(__MK20DX128__) && !defined(__MK20DX256__) && !defined(__MKL26Z64__) && !defined(__MK66FX1M0__) && !defined(__MK64FX512__)
+#if !defined(TEENSY_HW)
 #include "SoftwareSerial.h"
 #endif
 
 FrSkySportSensorAss ass;                               // Create ASS sensor with default ID
+FrSkySportSensorEsc esc;                               // Create ESC sensor with default ID
 FrSkySportSensorFcs fcs;                               // Create FCS-40A sensor with default ID (use ID8 for FCS-150A)
 FrSkySportSensorFlvss flvss1;                          // Create FLVSS sensor with default ID
 FrSkySportSensorFlvss flvss2(FrSkySportSensor::ID15);  // Create FLVSS sensor with given ID
@@ -33,7 +35,8 @@ FrSkySportSensorRpm rpm;                               // Create RPM sensor with
 FrSkySportSensorSp2uart sp2uart;                       // Create SP2UART Type B sensor with default ID
 FrSkySportSensorVario vario;                           // Create Variometer sensor with default ID
 #ifdef POLLING_ENABLED
-  FrSkySportDecoder decoder(true);                     // Create decoder object with polling
+  #include "FrSkySportPollingSimple.h"
+  FrSkySportDecoder decoder(new FrSkySportPollingSimple()); // Create telemetry object with simple polling
 #else
   FrSkySportDecoder decoder;                           // Create decoder object without polling
 #endif
@@ -44,10 +47,10 @@ uint16_t decodeResult;
 void setup()
 {
   // Configure the decoder serial port and sensors (remember to use & to specify a pointer to sensor)
-#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MKL26Z64__) || defined(__MK66FX1M0__) || defined(__MK64FX512__)
-  decoder.begin(FrSkySportSingleWireSerial::SERIAL_3, &ass, &fcs, &flvss1, &flvss2, &gps, &rpm, &sp2uart, &vario);
+#if defined(TEENSY_HW)
+  decoder.begin(FrSkySportSingleWireSerial::SERIAL_3, &ass, &esc, &fcs, &flvss1, &flvss2, &gps, &rpm, &sp2uart, &vario);
 #else
-  decoder.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_12, &ass, &fcs, &flvss1, &flvss2, &gps, &rpm, &sp2uart, &vario);
+  decoder.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_12, &ass, &esc, &fcs, &flvss1, &flvss2, &gps, &rpm, &sp2uart, &vario);
 #endif
   Serial.begin(115200);
 }
@@ -70,6 +73,15 @@ void loop()
     // Get airspeed sensor (ASS) data
     Serial.print("ASS: airspeed = "); Serial.println(ass.getSpeed()); // Airspeed in km/h
   
+    // Get ESC sensor data
+    Serial.print("ESC: voltage = "); Serial.print(esc.getVoltage());                      // ESC voltage in volts
+    Serial.print("V, current = "); Serial.print(esc.getCurrent());                        // ESC current draw in amps
+    Serial.print("A, rpm = "); Serial.print(esc.getRpm());                                // ESC motor rotations per minute
+    Serial.print(", consumption = "); Serial.print(esc.getConsumption());                 // ESC current consumtion in mAh
+    Serial.print("mAh, temp = "); Serial.print(esc.getTemp());                            // ESC temperature in degrees Celsius (can be negative, will be rounded)
+    Serial.print(" deg. C, SBEC voltage = "); Serial.print(esc.getSbecVoltage());         // ESC SBEC voltage in volts
+    Serial.print("V, SBEC current = "); Serial.print(esc.getSbecCurrent()); Serial.println("A");   // ESC SBEC current draw in amps
+
     // Get current/voltage sensor (FCS) data
     Serial.print("FCS: current = "); Serial.print(fcs.getCurrent());                    // Current consumption in amps
     Serial.print("A, voltage = "); Serial.print(fcs.getVoltage()); Serial.println("V"); // Battery voltage in volts
@@ -82,7 +94,7 @@ void loop()
     Serial.print("V, cell3 = "); Serial.print(flvss2.getCell3()); Serial.print("V, cell4 = "); Serial.print(flvss2.getCell4());
     Serial.print("V, cell5 = "); Serial.print(flvss2.getCell5()); Serial.print("V, cell6 = "); Serial.print(flvss2.getCell6()); Serial.println("V"); 
   
-    // Get GPS data
+    // Get GPS sensor data
     Serial.print("GPS: lat = "); Serial.print(gps.getLat(), 6); Serial.print(", lon = "); Serial.print(gps.getLon(), 6); // Latitude and longitude in degrees decimal (positive for N/E, negative for S/W)
     Serial.print(", altitude = "); Serial.print(gps.getAltitude()); // Altitude in m (can be negative)
     Serial.print("m, speed = "); Serial.print(gps.getSpeed());      // Speed in m/s

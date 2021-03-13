@@ -1,6 +1,6 @@
 /*
-  FrSky sensor data polling class for Teensy 3.x/LC, ESP8266 and ATmega328P based boards (e.g. Pro Mini, Nano, Uno)
-  (c) Pawelsky 20190824
+  FrSky sensor data polling base class class for Teensy LC/3.x/4.x, ESP8266, ATmega2560 (Mega) and ATmega328P based boards (e.g. Pro Mini, Nano, Uno)
+  (c) Pawelsky 20210108
   Not for commercial use
 */
 
@@ -8,17 +8,13 @@
 
 FrSkySportPolling::FrSkySportPolling()
 {
-  nextPollIdIdx = 0;
   nextPollTime = 0;
   receiverDataIdx = 0;
   receiverDataPollTime = 0;
 }
 
-FrSkySportSensor::SensorId FrSkySportPolling::getNextId()
-{
-  if(nextPollIdIdx >= FRSKY_POLLIED_ID_COUNT) nextPollIdIdx = 0;
-  return POLLED_ID_TABLE[nextPollIdIdx++];
-}
+void FrSkySportPolling::sensorActive(FrSkySportSensor::SensorId id) {}
+FrSkySportSensor::SensorId FrSkySportPolling::getNextId() { return FrSkySportSensor::ID_IGNORE; }
 
 FrSkySportSensor::SensorId FrSkySportPolling::pollData(FrSkySportSingleWireSerial& serial, uint32_t now)
 {
