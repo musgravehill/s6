@@ -1,4 +1,5 @@
 --mysdcard\SCRIPTS\TELEMETRY
+--Scripts are located on the SD card in the folder /SCRIPTS/TELEMETRY/<name>.lua. File name length (without extension) must be 6 characters or less
  
 
 local gps_lat_home = 0
@@ -129,27 +130,59 @@ end
 
 --function is called once when script is loaded and begins execution
 local function init_func()
-	data_ids_GPS = getFieldInfo("GPS").id 
-	data_ids_GAlt = getFieldInfo("GAlt").id     
-	data_ids_VFAS = getFieldInfo("VFAS").id 
-	data_ids_RPM = getFieldInfo("RPM").id      
-	data_ids_GSpd = getFieldInfo("GSpd").id  
-	data_ids_Tmp1 = getFieldInfo("Tmp1").id  
-	data_ids_Tmp2 = getFieldInfo("Tmp2").id  
-	data_ids_Curr = getFieldInfo("Curr").id     
-    data_ids_Hdg = getFieldInfo("Hdg").id  	
+    if (getFieldInfo("GPS")~=nil) then
+		data_ids_GPS = getFieldInfo("GPS").id
+	end
+	
+    if (getFieldInfo("GAlt")~=nil) then	 
+		data_ids_GAlt = getFieldInfo("GAlt").id     
+	end
+	
+    if (getFieldInfo("VFAS")~=nil) then
+		data_ids_VFAS = getFieldInfo("VFAS").id 
+	end
+	
+    if (getFieldInfo("RPM")~=nil) then
+		data_ids_RPM = getFieldInfo("RPM").id
+	end
+	
+    if (getFieldInfo("GSpd")~=nil) then	
+		data_ids_GSpd = getFieldInfo("GSpd").id  
+	end
+	
+    if (getFieldInfo("Tmp1")~=nil) then
+		data_ids_Tmp1 = getFieldInfo("Tmp1").id  
+	end
+	
+    if (getFieldInfo("Tmp")~=nil) then
+		data_ids_Tmp2 = getFieldInfo("Tmp").id  
+	end
+	
+    if (getFieldInfo("Curr")~=nil) then
+		data_ids_Curr = getFieldInfo("Curr").id  
+	end
+	
+    if (getFieldInfo("Hdg")~=nil) then	
+		data_ids_Hdg = getFieldInfo("Hdg").id  	
+	end
+	
 end
 
 --is called periodically, the screen visibility does not matter
-local function background_func()	   
-	 GPS_sat_count = getValue(data_ids_RPM) 
-	 GPS_DOP = getValue(data_ids_Tmp1)
-	 GPS_fixType = getValue(data_ids_Tmp2)
-	 GSpd = getValue(data_ids_GSpd)
-	 VTX_volt = getValue(data_ids_Curr) 
-	 LIPO_volt = getValue(data_ids_VFAS)	 
-	 
-	 if((GPS_sat_count > 4) and (GPS_fixType==4))then 
+local function background_func()	  
+    if (data_ids_RPM~=0 and data_ids_Tmp1~=0 and data_ids_Tmp2~=0 and data_ids_GSpd~=0) then
+		GPS_sat_count = getValue(data_ids_RPM) 
+		GPS_DOP = getValue(data_ids_Tmp1)
+		GPS_fixType = getValue(data_ids_Tmp2)
+		GSpd = getValue(data_ids_GSpd)	
+	end
+    
+	if (data_ids_Curr~=0 and data_ids_VFAS~=0) then	 
+		VTX_volt = getValue(data_ids_Curr) 
+		LIPO_volt = getValue(data_ids_VFAS)	  
+	end
+	
+	if((GPS_sat_count > 4) and (GPS_fixType==4))then 
 			gpsLatLon = getValue(data_ids_GPS)
 			if ("table"==type(gpsLatLon)) then
 				gps_lat_last = gpsLatLon["lat"]
