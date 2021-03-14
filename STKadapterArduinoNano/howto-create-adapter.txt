@@ -1,0 +1,12 @@
+1. run arduino ide
+2. upload Blink example. Test it. Then in console find log, where AVRDUDE upload hex.
+3. change hex to path STKalternative_20180415.hex
+4. run,fun
+
+C:\Program Files (x86)\Arduino\hardware\tools\avr/bin/avrdude -CC:\Users\bob.bobacer\AppData\Local\Arduino15\packages\MiniCore\hardware\avr\2.0.2/avrdude.conf -v -patmega328p -carduino -PCOM8 -b115200 -D -Uflash:w:C:\!BOB\GIT\s6\STKadapterArduinoNano\STKalternative_20180415.hex:i 
+
+goto:::  C:\Program Files (x86)\Arduino\hardware\tools\avr/bin/
+
+run::::   avrdude -CC:\Users\bob.bobacer\AppData\Local\Arduino15\packages\MiniCore\hardware\avr\2.0.2/avrdude.conf -v -patmega328p -carduino -PCOM8 -b115200 -D -Uflash:w:C:\!BOB\GIT\s6\STKadapterArduinoNano\STKalternative_20180415.hex:i
+
+
