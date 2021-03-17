@@ -9,7 +9,7 @@ local gps_lon_last = 0
 local gps_GAlt_home = 0
 local gps_GAlt_last = 0
 local gps_home_time_start = 0  
-local gps_home_time_delay = 5 --seconds   TODO 30..60 sec
+local gps_home_time_delay = 10 --seconds   TODO 30..60 sec
 local gps_home_is_init = 1
 local gpd_heading = 0 
 
@@ -154,8 +154,8 @@ local function init_func()
 		data_ids_Tmp1 = getFieldInfo("Tmp1").id  
 	end
 	
-    if (getFieldInfo("Tmp")~=nil) then
-		data_ids_Tmp2 = getFieldInfo("Tmp").id  
+    if (getFieldInfo("Tmp2")~=nil) then
+		data_ids_Tmp2 = getFieldInfo("Tmp2").id  
 	end
 	
     if (getFieldInfo("Curr")~=nil) then

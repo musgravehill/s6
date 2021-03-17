@@ -47,7 +47,7 @@ uint32_t TIMEMACHINE_prevMicros_1ms = 0L;
 uint32_t TIMEMACHINE_prevMicros_1103ms = 0L;
 
 void setup() {
-  delay(100);
+  delay(1000);
   frsky_telemetry.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_2,  &sensor_gps, &sensor_fcs_main, &sensor_rpm);
   gps.begin();
   analogReference(DEFAULT); //0..5 V on 5v_arduino
