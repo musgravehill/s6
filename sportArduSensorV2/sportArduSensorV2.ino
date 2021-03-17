@@ -39,8 +39,8 @@ float SYS_acc_main_v = 0.0f;
 float SYS_acc_video_v = 0.0f;
 
 
-#define SYS_ADC_PIN_acc_main A0
-#define SYS_ADC_PIN_acc_video A1
+#define SYS_ADC_PIN_acc_main A1
+#define SYS_ADC_PIN_acc_video A0
 
 //TIMEMACHINE
 uint32_t TIMEMACHINE_prevMicros_1ms = 0L;
@@ -48,7 +48,7 @@ uint32_t TIMEMACHINE_prevMicros_1103ms = 0L;
 
 void setup() {
   delay(100);
-  frsky_telemetry.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_12,  &sensor_gps, &sensor_fcs_main, &sensor_rpm);
+  frsky_telemetry.begin(FrSkySportSingleWireSerial::SOFT_SERIAL_PIN_2,  &sensor_gps, &sensor_fcs_main, &sensor_rpm);
   gps.begin();
   analogReference(DEFAULT); //0..5 V on 5v_arduino
 }
